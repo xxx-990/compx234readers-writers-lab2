@@ -98,6 +98,19 @@ class ReadersWritersMonitor:
         with self.condition:
             # TODO: Replace 'pass' with your logic
             pass
+            # 写者开始等待，计数+1
+            self.waiting_writers += 1
+
+            #只要有读者或有写者，就等待
+            while self.active_readers > 0 or self.active_writers > 0:
+                self.condition.wait()
+
+            #可以写了：等待数-1，正在写=1
+            self.waiting_writers -= 1
+            self.active_writers = 1
+            print(f"✏️  Writer {writer_id} starts writing  | Waiting writers: {self.waiting_writers}")
+            
+
 
     def end_write(self, writer_id: int) -> None:
         """
@@ -111,6 +124,12 @@ class ReadersWritersMonitor:
         with self.condition:
             # TODO: Replace 'pass' with your logic
             pass
+            #写者写完，状态重置
+            self.active_writers = 0
+            print(f"🖊️  Writer {writer_id} ends writing")
+
+            #唤醒所有等待线程（读者/写者）
+            self.condition.notify_all()
 
 # Donot Change this
 class Reader(threading.Thread):
